@@ -24,6 +24,8 @@ export class CheckProductsAvailabilityStep extends Step<OrderEntity, void> {
       }),
     );
 
+    console.log('availableProducts', availableProducts);
+
     if (!availableProducts.available) {
       throw new BadRequestException(
         `${order.items.map((item) => item.productId)} is not availbe`,

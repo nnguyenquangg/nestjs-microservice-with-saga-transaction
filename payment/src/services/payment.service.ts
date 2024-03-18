@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import { PaymentEntity } from 'src/entities/payment.entity';
 import { DataSource } from 'typeorm';
 
+@Injectable()
 export class PaymentService {
   constructor(private dataSource: DataSource) {}
 
@@ -25,12 +27,11 @@ export class PaymentService {
 
       await queryRunner.commitTransaction();
 
-      return { authorized: true };
+      return { authorized: false };
     } catch (err) {
-      // since we have errors lets rollback the changes we made
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
-      // you need to release a queryRunner which was manually instantiated
       await queryRunner.release();
     }
   }
@@ -44,10 +45,6 @@ export class PaymentService {
     await queryRunner.startTransaction();
     try {
       const paymentRepo = queryRunner.manager.getRepository(PaymentEntity);
-
-      await queryRunner.manager.query(
-        'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE',
-      );
 
       const payment = await paymentRepo.findOne({
         where: { orderId: request.orderId },

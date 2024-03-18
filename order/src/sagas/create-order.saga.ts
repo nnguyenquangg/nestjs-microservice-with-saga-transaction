@@ -6,6 +6,7 @@ import { CheckProductsAvailabilityStep } from './steps/check-product-availabilit
 import { AuthorizePaymentStep } from './steps/authorize-payment.step';
 import { ConfirmOrderStep } from './steps/confirm-order.step';
 import { UpdateStockStep } from './steps/update-stock.step';
+import { CreateOrderDto } from 'src/controllers/order.controller';
 
 @Injectable()
 export class CreateOrderSaga {
@@ -22,14 +23,21 @@ export class CreateOrderSaga {
     this.steps = [this.step1, this.step2, this.step3, this.step4, this.step5];
   }
 
-  async execute(order: OrderEntity) {
+  async execute(data: CreateOrderDto) {
     const successfulSteps: Step<OrderEntity, void>[] = [];
+
+    const order = new OrderEntity({
+      customerId: data.customerId,
+      items: data.items,
+      orderDate: new Date(),
+    });
 
     for (const step of this.steps) {
       try {
         console.info(`Invoking: ${step.name} ...`);
         await step.invoke(order);
         successfulSteps.unshift(step);
+        console.info(`Invoke successfully: ${step.name} ...`);
       } catch (error) {
         console.error(`Failed Step: ${step.name} !!`);
         successfulSteps.forEach(async (s) => {

@@ -21,6 +21,8 @@ export class AuthorizePaymentStep extends Step<OrderEntity, void> {
       }),
     );
 
+    console.log(paymentAuthorization);
+
     if (!paymentAuthorization.authorized) {
       throw new BadRequestException('The payment unsuccessful');
     }

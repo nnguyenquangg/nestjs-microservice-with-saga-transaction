@@ -29,11 +29,78 @@ export class InventoryService {
 
       await queryRunner.commitTransaction();
 
-      return products.every((product) =>
-        product.isStockSufficient(request[product.id]),
+      return (
+        products.length &&
+        products.every((product) =>
+          product.isStockSufficient(request[product.id]),
+        )
       );
     } catch (err) {
       await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async reduceStockQuantity(request: { [id: number]: number }): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.query(
+        'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE',
+      );
+
+      const inventoryRepo = queryRunner.manager.getRepository(InventoryEntity);
+      const products = await inventoryRepo.find({
+        where: { id: In(Object.keys(request)) },
+      });
+
+      await Promise.all(
+        products.map((product) =>
+          inventoryRepo.update(product.id, {
+            quantity: product.quantity - request[product.id],
+          }),
+        ),
+      );
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async restockQuantity(request: { [id: number]: number }): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.query(
+        'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE',
+      );
+
+      const inventoryRepo = queryRunner.manager.getRepository(InventoryEntity);
+      const products = await inventoryRepo.find({
+        where: { id: In(Object.keys(request)) },
+      });
+
+      await Promise.all(
+        products.map((product) =>
+          inventoryRepo.update(product.id, {
+            quantity: product.quantity + request[product.id],
+          }),
+        ),
+      );
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }

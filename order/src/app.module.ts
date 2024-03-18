@@ -27,7 +27,7 @@ import { randomUUID } from 'crypto';
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'inventory_client',
+            groupId: 'inventory_client' + randomUUID(),
           },
         },
       },
@@ -40,7 +40,7 @@ import { randomUUID } from 'crypto';
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'payment_client',
+            groupId: 'payment_client' + randomUUID(),
           },
         },
       },

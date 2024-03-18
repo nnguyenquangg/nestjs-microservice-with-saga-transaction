@@ -1,4 +1,4 @@
 import { PaymentEntity } from 'src/entities/payment.entity';
-import { EntityRepository } from 'typeorm';
+import { EntityRepository, Repository } from 'typeorm';
 @EntityRepository(PaymentEntity)
-export class PaymentRepository {}
+export class PaymentRepository extends Repository<PaymentEntity> {}

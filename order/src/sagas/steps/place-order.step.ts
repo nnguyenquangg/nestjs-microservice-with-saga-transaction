@@ -1,23 +1,24 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Step } from './step';
 import { OrderEntity } from 'src/entities/order.entity';
-import { OrderRepository } from 'src/repositories/order.repository';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PlaceOrderStep extends Step<OrderEntity, void> {
-  constructor(@Inject(OrderRepository) private orderRepo: OrderRepository) {
+  constructor(private dataSource: DataSource) {
     super();
     this.name = 'Place Order Step';
   }
 
-  invoke(order: OrderEntity): Promise<void> {
-    this.orderRepo.save(order);
-    return Promise.resolve();
+  async invoke(order: OrderEntity): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    const orderRepo = queryRunner.manager.getRepository(OrderEntity);
+    await orderRepo.save({ ...order });
   }
 
-  withCompensation(order: OrderEntity): Promise<void> {
-    order.status = 'cancelled';
-    this.orderRepo.save(order);
-    return Promise.resolve();
+  async withCompensation(order: OrderEntity): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    const orderRepo = queryRunner.manager.getRepository(OrderEntity);
+    await orderRepo.save({ ...order, status: 'CANCELLED' });
   }
 }
