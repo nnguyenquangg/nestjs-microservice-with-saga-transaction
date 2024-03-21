@@ -10,19 +10,15 @@ export class ConfirmOrderStep extends Step<OrderEntity, void> {
     this.name = 'Confirm Order Step';
   }
 
-  invoke(order: OrderEntity): Promise<void> {
+  async invoke(order: OrderEntity): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     const orderRepo = queryRunner.manager.getRepository(OrderEntity);
-    order.status = 'CONFIRMED';
-    orderRepo.save(order);
-    return Promise.resolve();
+    await orderRepo.update(order.id, { status: 'CONFIRMED' });
   }
 
-  withCompensation(order: OrderEntity): Promise<void> {
+  async withCompensation(order: OrderEntity): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     const orderRepo = queryRunner.manager.getRepository(OrderEntity);
-    order.status = 'CANCELLED';
-    orderRepo.save(order);
-    return Promise.resolve();
+    await orderRepo.update(order.id, { status: 'CANCELLED' });
   }
 }

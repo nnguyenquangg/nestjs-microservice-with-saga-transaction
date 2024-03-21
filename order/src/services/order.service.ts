@@ -25,22 +25,28 @@ export class OrderService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const inventoryRepo = queryRunner.manager.getRepository(OrderEntity);
-      const order = await inventoryRepo.save({
+      const orderRepo = queryRunner.manager.getRepository(OrderEntity);
+      const order = await orderRepo.save({
         customerId: body.customerId,
         items: body.items,
         orderDate: new Date(),
       });
 
       await this.checkProductsAvailabilityStep.invoke(order);
+
       await this.authorizePaymentStep.invoke(order);
-      await this.confirmOrderStep.invoke(order);
+
+      order.status = 'CONFIRMED';
+      await orderRepo.save(order);
+
       await this.updateStockStep.invoke(order);
 
       await queryRunner.commitTransaction();
+
       return order;
     } catch (err) {
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }
