@@ -41,7 +41,6 @@ export class InventoryController {
   @MessagePattern('inventory.stock.reduce')
   reduceStockQuantity(@Payload() message: UpdateStockMessage) {
     console.info('Inventory Service: reduce stock quantity');
-
     // console.log((undefined as any).a);
 
     this.inventoryService.reduceStockQuantity(
