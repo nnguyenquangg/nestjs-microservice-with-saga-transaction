@@ -11,7 +11,7 @@ import { DataSource } from 'typeorm';
 export class OrderService {
   constructor(
     private dataSource: DataSource,
-    @Inject()
+    @Inject(CheckProductsAvailabilityStep)
     private checkProductsAvailabilityStep: CheckProductsAvailabilityStep,
     @Inject(AuthorizePaymentStep)
     private authorizePaymentStep: AuthorizePaymentStep,
@@ -26,7 +26,6 @@ export class OrderService {
     await queryRunner.startTransaction();
     try {
       const inventoryRepo = queryRunner.manager.getRepository(OrderEntity);
-
       const order = await inventoryRepo.save({
         customerId: body.customerId,
         items: body.items,

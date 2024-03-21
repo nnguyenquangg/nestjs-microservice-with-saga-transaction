@@ -7,12 +7,14 @@ import { AuthorizePaymentStep } from './steps/authorize-payment.step';
 import { ConfirmOrderStep } from './steps/confirm-order.step';
 import { UpdateStockStep } from './steps/update-stock.step';
 import { CreateOrderDto } from 'src/controllers/order.controller';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class CreateOrderSaga {
-  private steps: Step<OrderEntity, void>[] = [];
+  private steps: Step<OrderEntity, OrderEntity | void>[] = [];
 
   constructor(
+    private dataSource: DataSource,
     @Inject(PlaceOrderStep) private step1: PlaceOrderStep,
     @Inject(CheckProductsAvailabilityStep)
     private step2: CheckProductsAvailabilityStep,
@@ -24,18 +26,19 @@ export class CreateOrderSaga {
   }
 
   async execute(data: CreateOrderDto) {
-    const successfulSteps: Step<OrderEntity, void>[] = [];
-
-    const order = new OrderEntity({
+    const successfulSteps: Step<OrderEntity, OrderEntity | void>[] = [];
+    const order: OrderEntity = {
       customerId: data.customerId,
       items: data.items,
       orderDate: new Date(),
-    });
+      id: await this.getLatestId(),
+    };
 
     for (const step of this.steps) {
       try {
         console.info(`Invoking: ${step.name} ...`);
         await step.invoke(order);
+
         successfulSteps.unshift(step);
         console.info(`Invoke successfully: ${step.name} ...`);
       } catch (error) {
@@ -48,5 +51,17 @@ export class CreateOrderSaga {
       }
     }
     console.info('Order Creation Transaction ended successfully');
+  }
+
+  private async getLatestId(): Promise<number> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    const orderRepo = queryRunner.manager.getRepository(OrderEntity);
+    const lastOrder = await orderRepo.findOne({
+      where: {},
+      order: { id: 'DESC' },
+    });
+
+    // Calculate the next ID
+    return ((lastOrder ? lastOrder.id : 0) as number) + 1;
   }
 }

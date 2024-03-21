@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export type OrderItemProps = {
@@ -10,7 +9,7 @@ export type OrderItemProps = {
 @Entity()
 export class OrderEntity {
   @PrimaryGeneratedColumn('increment')
-  id?: string;
+  id?: number;
 
   @Column()
   customerId: number;
@@ -23,8 +22,4 @@ export class OrderEntity {
 
   @Column({ type: 'jsonb' })
   items: OrderItemProps[];
-
-  constructor(private props: Partial<OrderEntity>) {
-    this.id = randomUUID();
-  }
 }

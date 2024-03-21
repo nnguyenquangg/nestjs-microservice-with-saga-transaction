@@ -25,7 +25,7 @@ export class OrderController {
     return this.createOrderSaga.execute(body);
   }
 
-  @Post('with-transactions')
+  @Post('without-transactions')
   withoutSagaPattern(@Body() body: CreateOrderDto) {
     return this.orderService.createOrder(body);
   }

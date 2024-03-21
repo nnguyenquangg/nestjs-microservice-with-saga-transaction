@@ -27,7 +27,7 @@ export class PaymentService {
 
       await queryRunner.commitTransaction();
 
-      return { authorized: false };
+      return { authorized: true };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
